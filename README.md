@@ -19,6 +19,7 @@ Vim issue-manager. Browse, time-track, and view issues in Vim.
 - View time-sheets
 - Publish time-sheets
 - Comment reply
+- View milestones/sprints
 
 ## Installation
 ### Dependencies

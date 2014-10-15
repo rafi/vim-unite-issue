@@ -71,7 +71,8 @@ endfunction
 function! s:github_issue_url(repo, key) " {{{
 	" Generates a proper GitHub API URL for issue fetching.
 	"
-	return s:github_issue_url(a:repo, a:key).'/'.a:key
+	let url = s:github_query_url(a:repo, g:unite_source_issue_github_limit)
+	return url.'/'.a:key
 endfunction
 
 " }}}
