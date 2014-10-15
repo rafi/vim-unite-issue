@@ -1,7 +1,7 @@
 
 " vim-unite-issue - Issue tracker and timer for Vim
 " Maintainer: Rafael Bodill <justrafi at gmail dot com>
-" Version:    20141015
+" License: MIT license
 "-------------------------------------------------
 
 let s:save_cpo = &cpo
@@ -24,7 +24,7 @@ endif
 
 if ! exists('g:unite_source_issue_jira_status_table')
 	let g:unite_source_issue_jira_status_table = {
-		\ 0: 'open', 2: 'reopen', 3: 'resolved', 4: 'closed' }
+		\ 0: 'open', 1: 'reopen', 2: 'resolved', 3: 'closed' }
 endif
 
 if ! exists('g:unite_source_issue_jira_priority_table')

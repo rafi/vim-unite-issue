@@ -1,0 +1,193 @@
+*unite-issue.txt*                                Issue-manager and time-tracker
+
+
+                                Vim unite-issue
+
+
+Maintainer:        Rafael Bodill <http://rafi.io/>
+Version:           0.9
+Plugin Homepage:   <https://github.com/rafi/vim-unite-issue>
+
+===============================================================================
+CONTENTS                                                 *unite-issue-contents*
+
+  1.  Introduction ................. |unite-issue-introduction|
+  2.  Installation ................. |unite-issue-installation|
+  3.  Usage ........................ |unite-issue-usage|
+  4.  Variables .................... |unite-issue-extening|
+  5.  Examples ..................... |unite-issue-faq|
+
+===============================================================================
+1. INTRODUCTION                                      *unite-issue-introduction*
+                                                                  *unite-issue*
+
+Use Vim to search, view and time-track your project's issues. Currently GitHub
+and JIRA are supported, along with these features:
+- Time-tracking per issue
+- Browse issue list
+- View issue and comments as Markdown
+- Open issue in browser
+
+Unite-issue introduces an 'issue' kind for Unite results, and these
+are the available actions for candidates:
+- view: View issue and comments as Markdown
+- browse: Open issue's URL in browser
+- start: Start time-tracking on a specific issue
+- stop: Stop issue timer and add a time-sheet entry
+
+===============================================================================
+2. INSTALLATION                                      *unite-issue-installation*
+
+Dependencies:
+https://github.com/Shougo/unite.vim
+https://github.com/mattn/webapi-vim
+https://github.com/tyru/open-browser.vim
+
+Use your favorite plugin manager, mine is NeoBundle:
+>
+	NeoBundleLazy 'rafi/vim-unite-issue', {
+		\  'directory': 'unite-issue',
+		\  'unite_sources': [ 'issue' ]
+		\  'depends': [ 'mattn/webapi-vim', 'tyru/open-browser.vim' ]
+		\ }
+<
+
+===============================================================================
+3. USAGE                                                    *unite-issue-usage*
+
+Browsing and Searching                                     *unite-issue-browse*
+                                                           *unite-issue-search*
+
+Each provider is a little different:
+
+GitHub                                                     *unite-issue-github*
+For GitHub, the usage is:
+>
+	:Unite issue:github[:owner/repository]
+<
+For example, listing all personal opened issues:
+>
+	:Unite issue:github'
+<
+Listing specific repository issues:
+>
+	:Unite issue:github:torvalds/linux'
+<
+
+JIRA                                                         *unite-issue-jira*
+For JIRA, the usage is:
+>
+	:Unite issue:jira [-custom-issue-jql=]
+<
+For example, listing all personal unresolved issues:
+>
+	:Unite issue:jira
+<
+Listing with a custom JQL:
+>
+	:Unite issue:jira -custom-issue-jql=project=FOO\ and\ assignee=bar
+<
+
+===============================================================================
+5. VARIABLES                                            *unite-issue-variables*
+
+g:unite_source_issue_data_dir                   *g:unite_source_issue_data_dir*
+		The directory where time logs are stored.
+
+		Default value is 'issue' under Unite's data directory.
+
+g:github_url                                                     *g:github_url*
+		GitHub's endpoint URL.
+		Default value: https://api.github.com/
+
+g:github_token                                                 *g:github_token*
+		Required: An authenticated token for accessing issue on your
+		GitHub account.
+
+g:unite_source_issue_github_limit           *g:unite_source_issue_github_limit*
+		The maximum number of candidates to show. Default value: 100
+
+g:unite_source_issue_github_state_table *g:unite_source_issue_github_state_table*
+		Text labels that are displayed next to candidates, and
+		correspond to the issue's state.
+
+		Default value:
+>
+		{ 'open': 'open', 'closed': 'closed' }
+<
+
+g:jira_url                                                         *g:jira_url*
+	Required: JIRA's endpoint URL
+
+g:jira_username                                               *g:jira_username*
+	Required: Your username for JIRA
+
+g:jira_password                                               *g:jira_password*
+	Required: Your password for JIRA
+
+g:unite_source_issue_jira_api_version   *g:unite_source_issue_jira_api_version*
+	JIRA's API version that will be used. Default value: 2
+
+g:unite_source_issue_jira_limit               *g:unite_source_issue_jira_limit*
+		The maximum number of candidates to show. Default value: 300
+
+g:unite_source_issue_jira_type_table     *g:unite_source_issue_jira_type_table*
+		Text labels that are displayed next to candidates, and
+		correspond to the issue's type.
+
+		Default value:
+>
+		{ 1: 'bug', 2: 'feature', 3: 'task',
+		  4: 'sub', 5: 'epic', 6: 'story' }
+<
+
+g:unite_source_issue_jira_status_table *g:unite_source_issue_jira_status_table*
+		Text labels for issue's status.
+
+		Default values:
+>
+		{ 0: 'open', 1: 'reopen', 2: 'resolved', 3: 'closed' }
+<
+
+                                     *g:unite_source_issue_jira_priority_table*
+g:unite_source_issue_jira_priority_table
+		Text labels for issue's priority.
+
+		Default values:
+>
+		{ 10000: '•', 1: '!', 2: '+', 3: '-', 4: 'v', 5: '.' }
+<
+
+===============================================================================
+6. EXAMPLES                                              *unite-issue-examples*
+
+GitHub:
+>
+	let g:github_token = '0123456789'
+
+	" Customize
+	let g:unite_source_issue_github_state_table = {
+		\ 'open': 'O', 'closed': 'C' }
+<
+
+JIRA:
+>
+	let g:jira_url = 'https://bugs.acme.com'
+	let g:jira_username = 'roadrunner'
+	let g:jira_password = 'meemeep'
+
+	" Customize
+	let g:unite_source_issue_jira_priority_table = {
+		\ 10000: '◡', 1: '⚡', 2: 'ᛏ', 3: '●', 4: '○', 5: '▽' }
+
+	let g:unite_source_issue_jira_status_table = {
+		\ 1: 'plan', 2: 'develop', 3: 'reopened', 4: 'resolved',
+		\ 5: 'closed', 6: 'feedback', 7: 'staged', 8: 'waiting',
+		\ 9: 'deployed', 10: 'pending', 11: 'review' }
+
+	let g:unite_source_issue_jira_type_table = {
+		\ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change',
+		\ 5: 'sub-task', 6: 'epic', 7: 'story', 8: 'sub-bug' }
+<
+
+==============================================================================
