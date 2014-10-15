@@ -24,10 +24,12 @@ let s:kind.action_table = {
 	\ },
 	\ 'start': {
 	\   'description': 'Start timer on issue',
+	\   'is_invalidate_cache': 1,
 	\   'is_quit': 0
 	\ },
 	\ 'stop': {
 	\   'description': 'Stop timer on issue',
+	\   'is_invalidate_cache': 1,
 	\   'is_quit': 0
 	\ },
 	\ 'comment': {

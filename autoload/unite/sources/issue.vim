@@ -46,8 +46,10 @@ function! s:source.gather_candidates(args, context) " {{{
 		let arg = ''
 	endif
 
+	let roster = issue#roster()
+
 	" Also provide the context object for any custom arguments needed
-	return issue#provider#{provider_name}#fetch_issues(arg, a:context)
+	return issue#provider#{provider_name}#fetch_issues(arg, a:context, roster)
 endfunction
 
 " }}}

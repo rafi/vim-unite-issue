@@ -33,7 +33,7 @@ let s:github_request_header = {
 
 " Public methods
 " --------------
-function! issue#provider#github#fetch_issues(repo, context) " {{{
+function! issue#provider#github#fetch_issues(repo, context, roster) " {{{
 	" Queries GitHub's Issue API, and parses candidates for Unite.
 	"
 	if ! exists('g:github_token')
@@ -41,7 +41,7 @@ function! issue#provider#github#fetch_issues(repo, context) " {{{
 	endif
 
 	let issues = s:fetch_issues(a:repo)
-	return s:parse_issues(issues, a:repo)
+	return s:parse_issues(issues, a:repo, a:roster)
 endfunction
 
 " }}}
@@ -97,7 +97,7 @@ function! s:fetch_issues(repo) " {{{
 endfunction
 
 " }}}
-function! s:parse_issues(issues, repo) " {{{
+function! s:parse_issues(issues, repo, roster) " {{{
 	" Parses GitHub's issue list and prepares possible Unite candidates.
 	"
 	let candidates = []
@@ -114,9 +114,10 @@ function! s:parse_issues(issues, repo) " {{{
 
 		let state = get(g:unite_source_issue_github_state_table,
 			\ issue.state, issue.state)
+		let started = index(a:roster, a:repo.'/'.issue.number) >= 0
 
 		let word = printf('%-6s %2s:%-5s %-7s | %s %s',
-			\ '#'.issue.number,
+			\ started ? '▶ #'.issue.number : '#'.issue.number,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
 			\ (type(issue.milestone) == 4 ? issue.milestone.title : ''),

@@ -8,7 +8,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " Some defaults " {{{
-let s:delim = '|$|'
+let s:delim = '	'
 " }}}
 
 " Public methods
@@ -21,6 +21,9 @@ function! issue#timer#start(repo, key) " {{{
 	else
 		" Write the PID file with timestamp
 		call writefile([ localtime() ], pid)
+
+		" Register issue in roster
+		call s:register(a:repo, a:key, 1)
 	endif
 endfunction
 
@@ -40,7 +43,12 @@ function! issue#timer#stop(repo, key) " {{{
 		let time_stopped = localtime()
 		let time_spent = time_stopped - time_started
 		if delete(pid) == 0
+			" Log the time into csv sheet
 			call s:log_time(a:repo, a:key, time_spent)
+
+			" Register issue in roster
+			call s:register(a:repo, a:key, 0)
+
 			" Show a nice informative message to the user
 			echomsg printf('You''ve spent %s on %s, logged in local timesheet',
 				\ s:print_time(time_spent),
@@ -62,25 +70,40 @@ function! s:get_pid_path(repo, key) " {{{
 	let uid = printf('%s/%s', a:repo, a:key)
 
 	return g:unite_source_issue_data_dir.'/'
-		\.issue#escape_filename(uid)
+		\.'pid_'.issue#escape_filename(uid)
 endfunction
 
 " }}}
 function! s:log_time(repo, key, seconds) " {{{
 	" Logs time in timesheet for a specific issue
 	"
-	let timesheet = g:unite_source_issue_data_dir.'/_time.log'
+	let timesheet = g:unite_source_issue_data_dir.'/timesheet.csv'
 
 	if filereadable(timesheet)
-		let db = readfile(timesheet)
+		let log = readfile(timesheet)
 	else
-		let db = []
+		let log = []
 	endif
 
-	let now = localtime()
-	let entry = a:repo.s:delim.a:key.s:delim.now.s:delim.a:seconds
-	call add(db, entry)
-	call writefile(db, timesheet)
+	let entry = printf(repeat('%s'.s:delim, 3).'%s',
+		\ a:repo, a:key, localtime(), a:seconds)
+
+	call add(log, entry)
+	call writefile(log, timesheet)
+endfunction
+
+" }}}
+function! s:register(repo, key, state) " {{{
+	let roster = issue#roster()
+	let entry = printf('%s/%s', a:repo, a:key)
+
+	if a:state == 1
+		call add(roster, entry)
+	else
+		call filter(roster, 'v:val != "'.entry.'"')
+	endif
+
+	return issue#roster(roster)
 endfunction
 
 " }}}

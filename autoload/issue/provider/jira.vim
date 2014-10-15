@@ -44,7 +44,7 @@ let s:jira_request_header = {
 
 " Public methods
 " --------------
-function! issue#provider#jira#fetch_issues(arg, context) " {{{
+function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	" Queries JIRA's API issues, and parses candidates for Unite.
 	"
 	if ! exists('g:jira_url') || ! exists('g:jira_username')
@@ -55,7 +55,7 @@ function! issue#provider#jira#fetch_issues(arg, context) " {{{
 	" argument, e.g. -custom-issue-jql=project=FOO\ AND\ assignee=joe
 	let jql = get(a:context, 'custom_issue_jql', '')
 	let response = s:fetch_issues(jql)
-	return s:parse_issues(response.issues)
+	return s:parse_issues(response.issues, a:roster)
 endfunction
 
 " }}}
@@ -110,7 +110,7 @@ function! s:fetch_issues(jql) " {{{
 endfunction
 
 " }}}
-function! s:parse_issues(issues) " {{{
+function! s:parse_issues(issues, roster) " {{{
 	" Parses JIRA's issue list and prepares possible Unite candidates.
 	"
 	let candidates = []
@@ -121,9 +121,10 @@ function! s:parse_issues(issues) " {{{
 			\ issue.fields.status.id, issue.fields.status.name)
 		let type = get(g:unite_source_issue_jira_type_table,
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
+		let started = index(a:roster, 'jira/'.issue.key) >= 0
 
 		let word = printf('%-9s %s:%-9s %-8s | %s%s %s',
-			\ issue.key,
+			\ started ? '▶ '.issue.key : issue.key,
 			\ priority,
 			\ status,
 			\ type,

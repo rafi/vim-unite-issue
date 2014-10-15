@@ -29,6 +29,21 @@ endif
 
 " Public methods
 " --------------
+function! issue#roster(...) " {{{
+	" Gets or sets the roster list
+	"
+	let roster_file = g:unite_source_issue_data_dir.'/roster.txt'
+
+	if a:0 > 0
+		return writefile(a:1, roster_file)
+	elseif filereadable(roster_file)
+		return readfile(roster_file)
+	else
+		return []
+	endif
+endfunction
+
+" }}}
 function! issue#escape_filename(str) " {{{
 	" Escapes a string suitable to be a filename
 	" Author: github.com/Shougo/unite.vim
@@ -77,6 +92,11 @@ function! issue#highlight_general() " {{{
 	syntax match uniteSource__Issue_Properties /.*|\s/
 				\ contained containedin=uniteSource__Issue
 	highlight default link uniteSource__Issue_Properties Function
+
+	" Within properties, match the issues in progress
+	syntax match uniteSource__Issue_Started /▶\s\S\+\s/
+				\ contained containedin=uniteSource__Issue_Properties
+	highlight default link uniteSource__Issue_Started Todo
 
 	" Within properties, match a non-word before a semicolon
 	syntax match uniteSource__Issue_Count /[^a-z ]\+\ze:/
