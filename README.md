@@ -7,6 +7,7 @@ Vim issue-manager. Browse, time-track, and view issues in Vim.
 - Multiple issue providers:
   - GitHub
   - JIRA
+- Time-tracking per issue
 - Browse issue list
 - View issue and comments as Markdown
 - Open issue in browser
@@ -15,7 +16,7 @@ Vim issue-manager. Browse, time-track, and view issues in Vim.
 ![vim-unite-issue screenshot](https://paste.xinu.at/FVGDx/)
 
 ## Planned Features
-- Time-tracking per issue
+- View time-sheets
 - Publish time-sheets
 - Comment reply
 
@@ -84,6 +85,12 @@ let g:unite_source_issue_jira_type_table = {
   \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
   \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
 ```
+
+### Actions
+- `view`: View issue as markdown
+- `browse`: Open issue's URL in browser
+- `start`: Start time-tracking on a specific issue
+- `stop`: Stop issue timer and add a time-sheet entry
 
 ## Credits & Contribution
 

@@ -1,7 +1,7 @@
 
 " vim-unite-issue - Issue tracker and timer for Vim
 " Maintainer: Rafael Bodill <justrafi at gmail dot com>
-" Version:    20141008
+" Version:    20141015
 "-------------------------------------------------
 
 let s:save_cpo = &cpo

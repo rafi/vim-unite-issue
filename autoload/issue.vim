@@ -1,7 +1,7 @@
 
 " vim-unite-issue - Issue tracker and timer for Vim
 " Maintainer: Rafael Bodill <justrafi at gmail dot com>
-" Version:    20141008
+" Version:    20141015
 "-------------------------------------------------
 
 let s:save_cpo = &cpo
@@ -17,8 +17,41 @@ if ! executable('curl')
 endif
 " }}}
 
+" Global defaults " {{{
+if ! exists('g:unite_source_issue_data_dir')
+	let g:unite_source_issue_data_dir = unite#get_data_directory().'/issue'
+endif
+
+if ! isdirectory(g:unite_source_issue_data_dir)
+	call mkdir(g:unite_source_issue_data_dir, 'p')
+endif
+" }}}
+
 " Public methods
 " --------------
+function! issue#escape_filename(str) " {{{
+	" Escapes a string suitable to be a filename
+	" Author: github.com/Shougo/unite.vim
+	"
+	if len(a:str) < 150
+		let hash = substitute(substitute(
+			\ a:str, ':', '=-', 'g'), '[/\\]', '=+', 'g')
+	elseif exists('*sha256')
+		let hash = sha256(a:str)
+	else
+		" Use simple hash.
+		let sum = 0
+		for i in range(len(a:str))
+			let sum += char2nr(a:str[i]) * (i + 1)
+		endfor
+
+		let hash = printf('%x', sum)
+	endif
+
+	return hash
+endfunction
+
+" }}}
 function! issue#get_path(dict, path) " {{{
 	" Gets a path from a dictionary, e.g. 'fields.foo.bar'
 	"
