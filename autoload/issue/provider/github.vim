@@ -33,7 +33,7 @@ let s:github_request_header = {
 
 " Public methods
 " --------------
-function! issue#provider#github#fetch_issues(repo) " {{{
+function! issue#provider#github#fetch_issues(repo, context) " {{{
 	" Queries GitHub's Issue API, and parses candidates for Unite.
 	"
 	if ! exists('g:github_token')

@@ -44,14 +44,17 @@ let s:jira_request_header = {
 
 " Public methods
 " --------------
-function! issue#provider#jira#fetch_issues(jql) " {{{
+function! issue#provider#jira#fetch_issues(arg, context) " {{{
 	" Queries JIRA's API issues, and parses candidates for Unite.
 	"
 	if ! exists('g:jira_url') || ! exists('g:jira_username')
 		call unite#print_error('unite-issue requires `g:jira_url` and `g:jira_username` variables')
 	endif
 
-	let response = s:fetch_issues(a:jql)
+	" Use Unite's context object to look for a custom jql
+	" argument, e.g. -custom-issue-jql=project=FOO\ AND\ assignee=joe
+	let jql = get(a:context, 'custom_issue_jql', '')
+	let response = s:fetch_issues(jql)
 	return s:parse_issues(response.issues)
 endfunction
 

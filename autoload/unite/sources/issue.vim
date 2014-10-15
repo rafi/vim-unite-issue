@@ -37,14 +37,17 @@ function! s:source.gather_candidates(args, context) " {{{
 		return []
 	endif
 
-	let name = a:args[0]
+	" Use the 1st argument as the provider's name,
+	" and the 2nd argument as an optional custom argument.
+	let provider_name = a:args[0]
 	if len(a:args) > 1
 		let arg = a:args[1]
 	else
 		let arg = ''
 	endif
 
-	return issue#provider#{name}#fetch_issues(arg)
+	" Also provide the context object for any custom arguments needed
+	return issue#provider#{provider_name}#fetch_issues(arg, a:context)
 endfunction
 
 " }}}
@@ -57,8 +60,8 @@ function! s:source.hooks.on_syntax(args, context) " {{{
 
 	call issue#highlight_general()
 
-	let name = a:args[0]
-	call issue#provider#{name}#highlight()
+	let provider_name = a:args[0]
+	call issue#provider#{provider_name}#highlight()
 endfunction
 
 " }}}

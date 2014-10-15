@@ -39,17 +39,18 @@ NeoBundleLazy 'rafi/vim-unite-issue', {
 ```
 
 ## Usage
-Open list of issues:
-```
-:Unite issue:<provider>[:argument]
-```
 Available actions for candidates:
-- `browse`: Open issue in browser
 - `view`: View issue and comments as Markdown
+- `browse`: Open issue's URL in browser
+- `start`: Start time-tracking on a specific issue
+- `stop`: Stop issue timer and add a time-sheet entry
 
 ### Providers
 
 #### GitHub
+```
+:Unite issue:github[:owner/repository]
+```
 - List all personal opened issues: `:Unite issue:github`
 - List repository issues: `:Unite issue:github:torvalds/linux`
 
@@ -63,8 +64,11 @@ let g:unite_source_issue_github_state_table = {
 ```
 
 #### JIRA
+```
+:Unite issue:jira [-custom-issue-jql=]
+```
 - List all personal unresolved issues: `:Unite issue:jira`
-- List custom JQL: `:Unite issue:jira:project=FOO+and+assignee=bar`
+- Custom JQL: `:Unite issue:jira -custom-issue-jql=project=FOO\ and\ assignee=bar`
 
 ##### Configuration
 ```viml
@@ -78,19 +82,13 @@ let g:unite_source_issue_jira_priority_table = {
 
 let g:unite_source_issue_jira_status_table = {
   \ 1: 'plan', 3: 'develop', 4: 'reopened', 5: 'resolved', 6: 'closed',
-  \ 10000: 'feedback', 10001: 'stage-test', 10002: 'waiting',
-  \ 10003: 'prod-test', 10004: 'pending', 10008: 'review' }
+  \ 10000: 'feedback', 10001: 'staged', 10002: 'waiting',
+  \ 10003: 'deployed', 10004: 'pending', 10008: 'review' }
 
 let g:unite_source_issue_jira_type_table = {
   \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
   \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
 ```
-
-### Actions
-- `view`: View issue as markdown
-- `browse`: Open issue's URL in browser
-- `start`: Start time-tracking on a specific issue
-- `stop`: Stop issue timer and add a time-sheet entry
 
 ## Credits & Contribution
 
