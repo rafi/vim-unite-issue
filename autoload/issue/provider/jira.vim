@@ -93,7 +93,7 @@ endfunction
 function! s:fetch_issues(jql) " {{{
 	" Queries JIRA's API with a custom JQL.
 	"
-	let jql = a:jql
+	let jql = substitute(a:jql, " ", "+", "g")
 	if len(jql) == 0
 		let jql = printf('assignee=%s+AND+resolution=unresolved', g:jira_username)
 	endif
