@@ -171,7 +171,7 @@ function! s:view_issue(issue) " {{{
 	"
 	let doc = printf('%s / %s / %s',
 		\ a:issue.fields.project.name, a:issue.key, a:issue.fields.summary)
-	let doc .= "\n---\n"
+	let doc .= "\n===\n"
 	let table = {
 			\ 'Type': 'issuetype.name',
 			\ 'Status': 'status.name',

@@ -103,13 +103,14 @@ function! s:kind.action_table.comment.func(candidate) " {{{
 	" Action: comment
 	" Add a new comment to issue
 	"
+	" TODO:
 endfunction
 
 " }}}
 function! s:setup_issue_view() " {{{
 	" Setup the issue view buffer.
 	"
-	setfiletype mkd
+	setfiletype markdown
 	setlocal buftype=nofile
 	setlocal bufhidden=wipe
 	setlocal nobuflisted

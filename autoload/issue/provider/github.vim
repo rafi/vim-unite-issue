@@ -12,6 +12,11 @@ if ! exists('g:github_url')
 	let g:github_url = 'https://api.github.com/'
 endif
 
+if ! exists('g:github_token')
+	let g:github_token =
+		\ matchstr(system('git config --global github.token'), '\w*')
+endif
+
 if ! exists('g:unite_source_issue_github_limit')
 	let g:unite_source_issue_github_limit = 100
 endif
@@ -33,10 +38,10 @@ let s:github_request_header = {
 
 " Public methods
 " --------------
-function! issue#provider#github#fetch_issues(repo, context, roster) " {{{
+function! issue#provider#github#fetch_issues(repo, context, roster) abort " {{{
 	" Queries GitHub's Issue API, and parses candidates for Unite.
 	"
-	if ! exists('g:github_token')
+	if strlen(g:github_token) == 0
 		call unite#print_error('unite-issue requires `g:github_token` variable')
 	endif
 
@@ -114,14 +119,15 @@ function! s:parse_issues(issues, repo, roster) " {{{
 
 		let state = get(g:unite_source_issue_github_state_table,
 			\ issue.state, issue.state)
-		let started = index(a:roster, a:repo.'/'.issue.number) >= 0
+		let started = index(a:roster, repo.'/'.issue.number) >= 0
 
-		let word = printf('%-6s %2s:%-5s %-7s | %s %s',
+		let word = printf('%-6s %2s:%-5s %-7s | %s %s %s',
 			\ started ? '▶ #'.issue.number : '#'.issue.number,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
-			\ (type(issue.milestone) == 4 ? issue.milestone.title : ''),
+			\ (type(issue.milestone) == 4 ? issue.milestone.title : '    '),
 			\ substitute(issue.title, '^\s\+', '', ''),
+			\ (type(issue.user) == 4 ? '@'.issue.user.login : ''),
 			\ (len(labels) > 0 ? '['.join(labels, ', ').']' : '')
 			\ )
 
@@ -174,7 +180,7 @@ function! s:view_issue(repo, issue, comments) " {{{
 	"
 	let doc = printf('%s / #%s / %s',
 		\ a:repo, a:issue.number, a:issue.title)
-	let doc .= "\n---\n"
+	let doc .= "\n===\n"
 	let table = {
 			\ 'Milestone': 'milestone.title',
 			\ 'Assignee': 'assignee.login',
