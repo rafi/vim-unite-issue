@@ -123,12 +123,13 @@ function! s:parse_issues(issues, repo, roster) " {{{
 		let state = get(g:unite_source_issue_github_state_table,
 			\ issue.state, issue.state)
 		let started = index(a:roster, repo.'/'.issue.number) >= 0
+		let milestone = type(issue.milestone) == 4 ? issue.milestone.title : '-'
 
-		let word = printf('%-6s %2s:%-5s %-7s | %s %s %s',
+		let word = printf('%-6s %2s:%-5s %-12s | %s %s %s',
 			\ started ? '▶ #'.issue.number : '#'.issue.number,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
-			\ (type(issue.milestone) == 4 ? issue.milestone.title : '    '),
+			\ (len(milestone) > 12 ? strpart(milestone, 0, 11) : milestone),
 			\ substitute(issue.title, '^\s\+', '', ''),
 			\ (type(issue.user) == 4 ? '@'.issue.user.login : ''),
 			\ (len(labels) > 0 ? '['.join(labels, ', ').']' : '')

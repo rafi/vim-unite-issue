@@ -123,10 +123,10 @@ function! s:parse_issues(issues, roster) " {{{
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
 		let started = index(a:roster, 'jira/'.issue.key) >= 0
 
-		let word = printf('%-9s %s:%-9s %-8s | %s%s %s',
+		let word = printf('%-9s %-7s:%-9s %-9s | %s%s %s',
 			\ started ? '▶ '.issue.key : issue.key,
 			\ priority,
-			\ status,
+			\ (len(status) > 9 ? strpart(status, 0, 8) : status),
 			\ type,
 			\ has_key(issue.fields, 'parent') ? issue.fields.parent.key.' / ' : '',
 			\ substitute(issue.fields.summary, '^\s\+', '', ''),
