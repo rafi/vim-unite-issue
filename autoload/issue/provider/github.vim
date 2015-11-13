@@ -108,7 +108,7 @@ function! s:parse_issues(issues, repo, roster) " {{{
 	let candidates = []
 	for issue in a:issues
 		let repo = a:repo
-		if len(repo) == 0 && has_key(issue, 'repository')
+		if len(repo) == 0 && type(issue) == type({}) && has_key(issue, 'repository')
 			let repo = issue.repository.full_name
 		endif
 
