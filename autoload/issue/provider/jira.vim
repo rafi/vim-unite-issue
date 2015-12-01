@@ -55,6 +55,9 @@ function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	" argument, e.g. -custom-issue-jql=project=FOO\ AND\ assignee=joe
 	let jql = get(a:context, 'custom_issue_jql', '')
 	let response = s:fetch_issues(jql)
+	if  has_key(response, 'error')
+		call unite#print_error('Error occured: '.response.error)
+	endif
 	return s:parse_issues(response.issues, a:roster)
 endfunction
 
@@ -103,7 +106,7 @@ function! s:fetch_issues(jql) " {{{
 	let res = webapi#http#get(url, {}, s:jira_request_header)
 
 	if res.status !~ '^2.*'
-		return [ 'error', 'Failed to fetch JIRA issue list' ]
+		return { 'issues' : [], 'error': 'Failed to fetch JIRA issue list' }
 	endif
 
 	return webapi#json#decode(res.content)
