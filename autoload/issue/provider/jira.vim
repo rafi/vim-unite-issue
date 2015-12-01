@@ -32,6 +32,10 @@ if ! exists('g:unite_source_issue_jira_priority_table')
 		\ 10000: '•', 1: '!', 2: '+', 3: '-', 4: 'v', 5: '.' }
 endif
 
+if ! exists('g:unite_source_issue_jira_request_header')
+	let g:unite_source_issue_jira_request_header = { }
+endif
+
 " }}}
 " Private JIRA Request header {{{
 let s:jira_request_header = {
@@ -103,7 +107,10 @@ function! s:fetch_issues(jql) " {{{
 
 	let fields = 'id,key,issuetype,parent,priority,summary,status,labels'
 	let url = s:jira_query_url(jql, g:unite_source_issue_jira_limit, fields)
-	let res = webapi#http#get(url, {}, s:jira_request_header)
+	let headers = s:jira_request_header
+	call extend(headers, g:unite_source_issue_jira_request_header)
+
+	let res = webapi#http#get(url, {}, headers)
 
 	if res.status !~ '^2.*'
 		return { 'issues' : [], 'error': 'Failed to fetch JIRA issue list' }
@@ -158,7 +165,9 @@ function! s:fetch_issue() dict " {{{
 	" Queries JIRA API for a specific issue.
 	"
 	let url = s:jira_issue_url(self.key)
-	let res = webapi#http#get(url, {}, s:jira_request_header)
+	let headers = s:jira_request_header
+	call extend(headers, g:unite_source_issue_jira_request_header)
+	let res = webapi#http#get(url, {}, headers)
 
 	if res.status !~ '^2.*'
 		return [ 'error', 'Failed to fetch JIRA issue' ]
