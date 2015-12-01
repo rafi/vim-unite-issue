@@ -181,6 +181,10 @@ JIRA:
 	let g:jira_username = 'roadrunner'
 	let g:jira_password = 'meemeep'
 
+	" Add custom special header, e.g. Cookie
+	let g:jira_request_header = {
+		\ 'Cookie': 'MYSPECIALCOOKIE=I_am_allowed_here' }
+
 	" Customize
 	let g:unite_source_issue_jira_priority_table = {
 		\ 10000: '◡', 1: '⚡', 2: 'ᛏ', 3: '●', 4: '○', 5: '▽' }
@@ -196,3 +200,4 @@ JIRA:
 <
 
 ==============================================================================
+" vim: set ts=2 sw=2 tw=78 noet norl ft=help :
