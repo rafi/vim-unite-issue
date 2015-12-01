@@ -125,6 +125,7 @@ g:jira_username                                               *g:jira_username*
 g:jira_password                                               *g:jira_password*
 	Required: Your password for JIRA
 
+
 g:unite_source_issue_jira_api_version   *g:unite_source_issue_jira_api_version*
 	JIRA's API version that will be used. Default value: 2
 
@@ -157,6 +158,10 @@ g:unite_source_issue_jira_priority_table
 >
 		{ 10000: '•', 1: '!', 2: '+', 3: '-', 4: 'v', 5: '.' }
 <
+
+                                     *g:unite_source_issue_jira_request_header*
+g:unite_source_issue_jira_request_header 
+	Optional: Add additional header fields to transmit to jira.
 
 ===============================================================================
 6. EXAMPLES                                              *unite-issue-examples*
