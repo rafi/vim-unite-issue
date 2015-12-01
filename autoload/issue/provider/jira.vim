@@ -58,6 +58,9 @@ function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	" Use Unite's context object to look for a custom jql
 	" argument, e.g. -custom-issue-jql=project=FOO\ AND\ assignee=joe
 	let jql = get(a:context, 'custom_issue_jql', '')
+	if len(jql) == 0
+		let jql = s:jira_build_jql({'assignee' : g:jira_username, 'resolution': 'unresolved', 'project':  a:arg})
+	endif
 	let response = s:fetch_issues(jql)
 	if  has_key(response, 'error')
 		call unite#print_error('Error occured: '.response.error)
@@ -78,6 +81,38 @@ endfunction
 
 " Private methods
 " ---------------
+function! s:jira_build_jql(elements, ...) "{{{
+	" Generates a proper jql string from multiple options
+	"
+	let link = a:0 > 0 ? a:000[0] : 'AND'
+	let jql=''
+	for key in keys(a:elements)
+		let jql_part=''
+		if type(a:elements[key]) == 4
+			" If the element is a dictionary we want to group it
+			let jql_part = '('.s:jira_build_jql(a:elements[key]['elements'], a:elements[key]['link']).')'
+		elseif type(a:elements[key]) <=1
+			" If the element is a number or string just print it
+			if len(a:elements[key]) != 0
+				let jql_part=printf('%s=%s',key,a:elements[key])
+			endif
+		elseif type(a:elements[key]) == 3
+			" If we have a list we should group and OR it
+			let jql_part = printf('(%s=%s)',key,join(a:elements[key],printf(' OR %s=', key)))
+		endif
+		" Insert link if neccessary
+		if len(jql) != 0 && len(jql_part) != 0
+			let jql=jql.' '.link.' '
+		endif
+		" Append current part if available
+		if len(jql_part) != 0
+			let jql=jql.jql_part
+		endif
+	endfor
+	return substitute(jql, " ", "+","g")
+endfunction
+
+"	}}}
 function! s:jira_query_url(jql, limit, fields) " {{{
 	" Generates a proper JIRA API URL querying list of issues
 	"
@@ -101,10 +136,6 @@ function! s:fetch_issues(jql) " {{{
 	" Queries JIRA's API with a custom JQL.
 	"
 	let jql = a:jql
-	if len(jql) == 0
-		let jql = printf('assignee=%s+AND+resolution=unresolved', g:jira_username)
-	endif
-
 	let fields = 'id,key,issuetype,parent,priority,summary,status,labels'
 	let url = s:jira_query_url(jql, g:unite_source_issue_jira_limit, fields)
 	let headers = s:jira_request_header
