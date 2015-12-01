@@ -77,15 +77,11 @@ Listing specific repository issues:
 JIRA                                                         *unite-issue-jira*
 For JIRA, the usage is:
 >
-	:Unite issue:jira[:PROJECT] [-custom-issue-jql=]
+	:Unite issue:jira [-custom-issue-jql=]
 <
 For example, listing all personal unresolved issues:
 >
 	:Unite issue:jira
-<
-For example, listing all personal unresolved issues of MYPROJECT:
->
-	:Unite issue:jira:MYPROJECT
 <
 Listing with a custom JQL:
 >
