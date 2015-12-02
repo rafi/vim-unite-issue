@@ -186,7 +186,7 @@ JIRA:
 	let g:jira_password = 'meemeep'
 
 	" Add custom special header, e.g. Cookie
-	let g:jira_request_header = {
+	let g:unite_source_issue_jira_request_header = {
 		\ 'Cookie': 'MYSPECIALCOOKIE=I_am_allowed_here' }
 
 	" Customize
