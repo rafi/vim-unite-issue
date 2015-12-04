@@ -52,7 +52,9 @@ function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	" Queries JIRA's API issues, and parses candidates for Unite.
 	"
 	if ! exists('g:jira_url') || ! exists('g:jira_username')
-		call unite#print_error('unite-issue requires `g:jira_url` and `g:jira_username` variables')
+		call unite#print_source_error(
+			\ 'unite-issue requires `g:jira_url` and `g:jira_username` variables',
+			\ 'issue')
 	endif
 
 	" Use Unite's context object to look for a custom jql
@@ -61,9 +63,11 @@ function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	if len(jql) == 0
 		let jql = s:jira_build_jql({'assignee' : g:jira_username, 'resolution': 'unresolved', 'project':  a:arg})
 	endif
+
+	call unite#print_source_message('Fetch JIRA: '.jql, 'issue')
 	let response = s:fetch_issues(jql)
-	if  has_key(response, 'error')
-		call unite#print_error('Error occured: '.response.error)
+	if has_key(response, 'error')
+		call unite#print_source_error('Error occured: '.response.error, 'issue')
 	endif
 	return s:parse_issues(response.issues, a:roster)
 endfunction

@@ -42,8 +42,12 @@ function! issue#provider#github#fetch_issues(repo, context, roster) abort " {{{
 	" Queries GitHub's Issue API, and parses candidates for Unite.
 	"
 	if strlen(g:github_token) == 0
-		call unite#print_error('unite-issue requires `g:github_token` variable')
+		call unite#print_source_error(
+			\ 'unite-issue requires `g:github_token` variable', 'issue')
 	endif
+
+	call unite#print_source_message(
+		\ 'Fetch GitHub: '.(len(a:repo) ? a:repo : '<all>'), 'issue')
 
 	let issues = s:fetch_issues(a:repo)
 	return s:parse_issues(issues, a:repo, a:roster)

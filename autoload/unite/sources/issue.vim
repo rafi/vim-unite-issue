@@ -33,7 +33,7 @@ function! s:source.gather_candidates(args, context) " {{{
 	" Gather candidates for Unite source's interface.
 	"
 	if len(a:args) ==  0
-		call unite#print_error('You must specify provider.')
+		call unite#print_source_error('You must specify provider.', 'issue')
 		return []
 	endif
 
