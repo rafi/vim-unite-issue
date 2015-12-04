@@ -71,7 +71,7 @@ endfunction
 " }}}
 function! issue#provider#jira#highlight() " {{{
 	" Defines JIRA's issue number highlight.
-	"
+
 	" Match an upper-case word immediately followed by a dash and digits
 	syntax match uniteSource__Issue_Key /\h[A-Z]\+\-\d\+\>/
 				\ contained containedin=uniteSource__Issue
@@ -136,7 +136,7 @@ function! s:fetch_issues(jql) " {{{
 	" Queries JIRA's API with a custom JQL.
 	"
 	let jql = a:jql
-	let fields = 'id,key,issuetype,parent,priority,summary,status,labels'
+	let fields = 'id,key,issuetype,parent,priority,summary,status,labels,assignee'
 	let url = s:jira_query_url(jql, g:unite_source_issue_jira_limit, fields)
 	let headers = s:jira_request_header
 	call extend(headers, g:unite_source_issue_jira_request_header)
@@ -163,12 +163,15 @@ function! s:parse_issues(issues, roster) " {{{
 		let type = get(g:unite_source_issue_jira_type_table,
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
 		let started = index(a:roster, 'jira/'.issue.key) >= 0
+		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
 
-		let word = printf('%-9s %-7s:%-9s %-9s | %s%s %s',
+"			\ (len(type) > 15 ? strpart(type, len(type)-14).'…' : type),
+		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S %S',
 			\ started ? '▶ '.issue.key : issue.key,
 			\ priority,
-			\ (len(status) > 9 ? strpart(status, 0, 8) : status),
-			\ type,
+			\ issue#str_trunc(status, 9),
+			\ issue#str_trunc(type, 15, 1),
+			\ issue#str_trunc(assignee, 10),
 			\ has_key(issue.fields, 'parent') ? issue.fields.parent.key.' / ' : '',
 			\ substitute(issue.fields.summary, '^\s\+', '', ''),
 			\ len(issue.fields.labels) > 0 ? '['.join(issue.fields.labels, ', ').']' : ''
@@ -177,7 +180,7 @@ function! s:parse_issues(issues, roster) " {{{
 		let item = {
 			\ 'word': word,
 			\ 'source': 'issue',
-			\ 'source__issue_info' : {
+			\ 'source__issue_info': {
 			\   'repo': 'jira',
 			\   'key': issue.key,
 			\   'url': g:jira_url.'/browse/'.issue.key,

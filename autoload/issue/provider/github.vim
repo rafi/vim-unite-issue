@@ -52,11 +52,16 @@ endfunction
 " }}}
 function! issue#provider#github#highlight() " {{{
 	" Defines GitHub's issue number highlight.
-	"
-	" Match a dash followed by digits
-	syntax match uniteSource__Issue_Key /#\d\+\>/
-				\ contained containedin=uniteSource__Issue
-	highlight default link uniteSource__Issue_Key Constant
+
+	" Match a word before a dash and digits (i.e. project name)
+	syntax match uniteSource__Issue_Project /\s*[a-zA-Z\/\-0-9…]*\ze\s*#\d\+/
+				\ contained containedin=uniteSource__Issue_Properties
+	highlight default link uniteSource__Issue_Project Type
+
+	" Match a dash followed by digits preceded with word (i.e. issue number)
+	syntax match uniteSource__Issue_Key /\s*[a-zA-Z\/\-0-9…]*\s*\zs#\d\+/
+				\ contained containedin=uniteSource__Issue_Properties
+	highlight default link uniteSource__Issue_Key Number
 endfunction
 " }}}
 
@@ -124,14 +129,16 @@ function! s:parse_issues(issues, repo, roster) " {{{
 			\ issue.state, issue.state)
 		let started = index(a:roster, repo.'/'.issue.number) >= 0
 		let milestone = type(issue.milestone) == 4 ? issue.milestone.title : '-'
+		let assignee = type(issue.user) == 4 ? issue.user.login : ''
 
-		let word = printf('%-6s %2s:%-5s %-12s | %s %s %s',
+		let word = printf('%-15S %-6S %2S:%-5S %12S  %-8S | %S %S',
+			\ issue#str_trunc(repo, 15),
 			\ started ? '▶ #'.issue.number : '#'.issue.number,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
-			\ (len(milestone) > 12 ? strpart(milestone, 0, 11) : milestone),
+			\ issue#str_trunc(milestone, 12),
+			\ issue#str_trunc(assignee, 8),
 			\ substitute(issue.title, '^\s\+', '', ''),
-			\ (type(issue.user) == 4 ? '@'.issue.user.login : ''),
 			\ (len(labels) > 0 ? '['.join(labels, ', ').']' : '')
 			\ )
 

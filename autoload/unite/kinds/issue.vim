@@ -111,6 +111,7 @@ function! s:setup_issue_view() " {{{
 	" Setup the issue view buffer.
 	"
 	setfiletype markdown
+	setlocal nospell
 	setlocal buftype=nofile
 	setlocal bufhidden=wipe
 	setlocal nobuflisted

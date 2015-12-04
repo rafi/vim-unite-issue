@@ -15,8 +15,8 @@ endif
 if ! executable('curl')
 	call unite#print_error('unite-issue requires the `curl` command')
 endif
-" }}}
 
+" }}}
 " Global defaults " {{{
 if ! exists('g:unite_source_issue_data_dir')
 	let g:unite_source_issue_data_dir = unite#get_data_directory().'/issue'
@@ -67,6 +67,19 @@ function! issue#escape_filename(str) " {{{
 endfunction
 
 " }}}
+function! issue#str_trunc(str, len, ...) " {{{
+	let str = a:str
+	if len(str) > a:len
+		if a:0 > 0 && a:1 == 1
+			let str = strpart(str, len(str) - a:len-1).'…'
+		else
+			let str = strpart(str, 0, a:len-1).'…'
+		endif
+	endif
+	return str
+endfunction
+
+" }}}
 function! issue#get_path(dict, path) " {{{
 	" Gets a path from a dictionary, e.g. 'fields.foo.bar'
 	"
@@ -98,18 +111,23 @@ function! issue#highlight_general() " {{{
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_Started Todo
 
-	" Within properties, match a non-word before a semicolon
+	" Within properties, match a non-word before a semicolon (e.g. comments)
 	syntax match uniteSource__Issue_Count /[^a-z ]\+\ze:/
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_Count Statement
 
-	" Within properties, match a word after a semicolon
-	syntax match uniteSource__Issue_Status /\:[a-zA-Z\-\_]\+\>/
+	" Within properties, match a word after a semicolon (e.g. priority)
+	syntax match uniteSource__Issue_Status /:\(\h\+\-\?\s\?…\?\)\{1,3}/
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_Status PreProc
 
+	" Within properties, match a word before a pipe (e.g. user)
+	syntax match uniteSource__Issue_User /\(\h\+\s\?…\?\)\{1,2}\ze\s*|/
+				\ contained containedin=uniteSource__Issue_Properties
+	highlight default link uniteSource__Issue_User Special
+
 	" Outside of properties,
-	" match everything between brackets towards end of string
+	" match everything between brackets towards end of string (e.g. tags)
 	syntax match uniteSource__Issue_Labels /\[.\+\]\s*$/
 				\ contained containedin=uniteSource__Issue
 	highlight default link uniteSource__Issue_Labels Comment
