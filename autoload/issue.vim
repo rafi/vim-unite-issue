@@ -122,7 +122,7 @@ function! issue#highlight_general() " {{{
 	highlight default link uniteSource__Issue_Status PreProc
 
 	" Within properties, match a word before a pipe (e.g. user)
-	syntax match uniteSource__Issue_User /\(\h\+\s\?…\?\)\{1,2}\ze\s*|/
+	syntax match uniteSource__Issue_User /\(\h\+\.\?\s\?…\?\)\{1,2}\ze\s*|/
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_User Special
 

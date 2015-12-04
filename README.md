@@ -13,7 +13,7 @@ Vim issue-manager. Browse, time-track, and view issues in Vim.
 - Open issue in browser
 
 ## Screenshot
-![vim-unite-issue screenshot](https://paste.xinu.at/FVGDx/)
+![vim-unite-issue screenshot](http://rafi.io/static/img/project/vim-unite-issue/jira.png)
 
 ## Planned Features
 - View time-sheets

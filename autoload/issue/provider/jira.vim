@@ -169,14 +169,14 @@ function! s:parse_issues(issues, roster) " {{{
 		let started = index(a:roster, 'jira/'.issue.key) >= 0
 		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
 
-"			\ (len(type) > 15 ? strpart(type, len(type)-14).'…' : type),
 		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S %S',
 			\ started ? '▶ '.issue.key : issue.key,
 			\ priority,
 			\ issue#str_trunc(status, 9),
 			\ issue#str_trunc(type, 15, 1),
 			\ issue#str_trunc(assignee, 10),
-			\ has_key(issue.fields, 'parent') ? issue.fields.parent.key.' / ' : '',
+			\ has_key(issue.fields, 'parent') && issue.fields.parent.key !=? ''
+			\   ? issue.fields.parent.key.' / ' : '',
 			\ substitute(issue.fields.summary, '^\s\+', '', ''),
 			\ len(issue.fields.labels) > 0 ? '['.join(issue.fields.labels, ', ').']' : ''
 			\ )
