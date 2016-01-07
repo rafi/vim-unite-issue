@@ -189,6 +189,8 @@ function! s:parse_issues(issues, roster) " {{{
 			\   'key': issue.key,
 			\   'url': g:jira_url.'/browse/'.issue.key,
 			\   'fetch_issue': function('s:fetch_issue'),
+			\   'fetch_issue_description': function('s:fetch_issue_description'),
+			\   'post_issue_description': function('s:post_issue_description'),
 			\  }
 			\ }
 
@@ -279,6 +281,34 @@ function! s:view_issue(issue) " {{{
 endfunction
 
 " }}}
+
+function! s:fetch_issue_description() dict " {{{
+	" Open issue description in buffer.
+	"
+	let url = s:jira_issue_url(self.key)
+	let headers = s:jira_request_header
+	call extend(headers, g:unite_source_issue_jira_request_header)
+	let res = webapi#http#get(url, {}, headers)
+
+	if res.status !~ '^2.*'
+		return [ 'error', 'Failed to fetch JIRA issue' ]
+	endif
+
+	let issue = webapi#json#decode(res.content)
+	let doc = ""
+	if len(issue.fields.description) > 0
+		let doc .= issue.fields.description
+	endif
+
+	return doc
+endfunction
+"	}}}
+
+function! s:post_issue_description() dict " {{{
+	return getline(0,'$')
+endfunction
+" }}}"
+
 function! s:convert_to_markdown(txt) " {{{
 	" Converts Atlassian JIRA markup to Markdown.
 	"

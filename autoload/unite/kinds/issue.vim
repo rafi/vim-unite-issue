@@ -18,6 +18,10 @@ let s:kind.action_table = {
 	\   'description': 'View issue as Markdown',
 	\   'is_quit': 0
 	\ },
+	\ 'edit': {
+	\   'description': 'Edit issue description',
+	\   'is_quit': 0
+	\ },
 	\ 'browse': {
 	\   'description': 'Open in browser',
 	\   'is_quit': 0
@@ -71,6 +75,23 @@ function! s:kind.action_table.view.func(candidate) " {{{
 endfunction
 
 " }}}
+function! s:kind.action_table.edit.func(candidate) " {{{
+	" Action: edit
+	" Edit the issue description
+	"
+	let description = a:candidate.source__issue_info.fetch_issue_description()
+	let splited_desc = split(description, '\r\n\|[\r\n]')
+  let tmpfile = '/tmp/vim-unite-issue-' . a:candidate.source__issue_info.key
+  call writefile(splited_desc, tmpfile)
+  silent execute 'botright new' . tmpfile
+	silent put =description
+  execute 'set ft=issue'
+	" TODO: post issue description
+	" autocmd BufWriteCmd <buffer> function('a:candidate.source__issue_info.post_issue_description')
+	:0
+endfunction
+"	}}}
+
 function! s:kind.action_table.start.func(candidate) " {{{
 	" Action: start
 	" Starts a timer on a specific issue
