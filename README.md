@@ -7,6 +7,7 @@ Vim issue-manager. Browse, time-track, and view issues in Vim.
 - Multiple issue providers:
   - GitHub
   - JIRA
+  - Redmine (only viewing and browsing)
 - Time-tracking per issue
 - Browse issue list
 - View issue and comments as Markdown
@@ -89,6 +90,20 @@ let g:unite_source_issue_jira_status_table = {
 let g:unite_source_issue_jira_type_table = {
   \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
   \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
+```
+
+#### Redmine
+
+```
+:Unite issue:redmine
+```
+- List all open issues
+
+##### Configuration
+
+```
+let g:redmine_url = 'https://my.redmine.host/path_to_redmine'
+let g:redmine_api_key = 'my supersecret api key'
 ```
 
 ## Credits & Contribution

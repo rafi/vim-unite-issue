@@ -16,6 +16,15 @@ endif
 if ! exists('g:unite_source_issue_redmine_request_header')
 	let g:unite_source_issue_redmine_request_header = {}
 endif
+
+if ! exists('g:unite_source_issue_redmine_field_map')
+	let g:unite_source_issue_redmine_field_map = {
+		\ 'assigned_to_id': 'Assignee',
+		\ 'status_id': 'Status',
+		\ 'done_ratio': 'Done',
+		\ 'relates': 'Relates'
+	\ }
+endif
 " }}}
 
 " {{{ Private Request header
@@ -172,9 +181,15 @@ function! s:fetch_issue_description() dict
 endfunction
 
 function! s:view_issue(issue)
-	let doc = printf('%s / #%s / %s',
+	let members = s:fetch_project_members(a:issue.project.id)
+	let issue_statuses = s:fetch_issue_statuses()
+	let doc = printf("%s / #%s / %s\n",
 		\ a:issue.project.name, a:issue.id, a:issue.subject)
-	let doc .= "\n===\n"
+	let underline = ''
+	while len(underline) < 80
+		let underline .= '='
+	endwhile
+	let doc .= underline . "\n"
 	let doc .= printf(
 		\ "Status:   %15S   Begin: %15S\n",
 		\ a:issue.status.name,
@@ -209,26 +224,146 @@ function! s:view_issue(issue)
 	let doc .= "\n" . substitute(a:issue.description, '\r', '', 'g') . "\n\n"
 	if has_key(a:issue, 'journals')
 		for entry in a:issue.journals
-			let doc .= printf("%S %S\n", entry.created_on, entry.user.name)
-			let doc .= "===\n"
+			let head = printf("# %S %S ", entry.created_on, entry.user.name)
+			while strchars(head) < 80
+				let head .= '-'
+			endwhile
+			let doc .= head . "\n"
 			if has_key(entry, 'details')
 				for detail in entry.details
+					let detail_name = has_key(g:unite_source_issue_redmine_field_map, detail.name) ? g:unite_source_issue_redmine_field_map[detail.name] : detail.name
 					if has_key(detail, 'new_value') && ! has_key(detail, 'old_value')
-						let doc .= printf("++ %S: %S\n", detail.name, detail.new_value)
+						let val = detail.new_value
+						if detail.name == 'assigned_to_id'
+							if has_key(members, detail.new_value)
+								let val = members[detail.new_value]
+							endif
+						elseif detail.name == 'relates'
+							let val = s:get_issue_subject(detail.new_value)
+						elseif detail.name == 'status_id'
+							if has_key(issue_statuses, detail.new_value)
+								let val = issue_statuses[detail.new_value]
+							endif
+						endif
+						let doc .= printf("++ %S: %S\n", detail_name, val)
 					elseif has_key(detail, 'new_value') && has_key(detail, 'old_value')
-						let doc .= printf("~~ %S: %S => %S\n", detail.name, detail.old_value, detail.new_value)
+						let oval = detail.old_value
+						let nval = detail.new_value
+						if detail.name == 'assigned_to_id'
+							if has_key(members, detail.old_value)
+								let oval = members[detail.old_value]
+							endif
+							if has_key(members, detail.new_value)
+								let nval = members[detail.new_value]
+							endif
+						elseif detail.name == 'relates'
+							let oval = s:get_issue_subject(detail.old_value)
+							let nval = s:get_issue_subject(detail.new_value)
+						elseif detail.name == 'status_id'
+							if has_key(issue_statuses, detail.old_value)
+								let oval = issue_statuses[detail.old_value]
+							endif
+							if has_key(issue_statuses, detail.new_value)
+								let nval = issue_statuses[detail.new_value]
+							endif
+						endif
+						let doc .= printf("~~ %S: %S => %S\n", detail_name, oval, nval)
 					else
-						let doc .= printf("-- %S", detail.name)
+						let doc .= printf("-- %S", detail_name)
 					endif
 				endfor
 				let doc .= "\n"
 			endif
 			if has_key(entry, 'notes') && len(entry.notes) != 0
-				let doc .= printf("%S\n\n", substitute(entry.notes, '\r', '', 'g'))
+				let doc .= printf("%S\n\n", substitute(substitute(entry.notes, '\r', '', 'g'), '#', '-', 'g'))
 			endif
 		endfor
 	endif
 	return doc
+endfunction
+
+function! s:redmine_project_members_url(pid)
+	let base = substitute(g:redmine_url, '/\?$', '', '')
+	return printf('%s/projects/%s/memberships.json', base, a:pid)
+endfunction
+
+function! s:redmine_project_member_url(pid, uid)
+	let base = substitute(g:redmine_url, '/\?$', '', '')
+	return printf('%s/projects/%s/memberships/%s.json', base, a:pid, a:uid)
+endfunction
+
+function! s:fetch_project_members(pid)
+	let url = s:redmine_project_members_url(a:pid)
+	let headers = s:redmine_request_header
+
+	echo url
+	let res = webapi#http#get(url, {}, headers)
+	if res.status !~ '^2.*'
+		return {
+			\ 'issues': [],
+			\ 'error': 'Failed to fetch Redmine project members list'
+		\ }
+	endif
+
+	let response = webapi#json#decode(res.content)
+	let members = {}
+	for member in response.memberships
+		if has_key(member, 'user')
+			let roles = ''
+			for role in member.roles
+				if len(roles) == 0
+					let roles = role.name
+				else
+					let roles .= printf(', %s', role.name)
+				endif
+			endfor
+			let members[member.user.id] = printf('%s __%s__', member.user.name, roles)
+		endif
+	endfor
+	return members
+endfunction
+
+function! s:redmine_issue_statuses_url()
+	let base = substitute(g:redmine_url, '/\?$', '', '')
+	return printf('%s/issue_statuses.json', base)
+endfunction
+
+function! s:fetch_issue_statuses()
+	let url = s:redmine_issue_statuses_url()
+	let headers = s:redmine_request_header
+
+	let res = webapi#http#get(url, {}, headers)
+	if res.status !~ '^2.*'
+		return {
+			\ 'issues': [],
+			\ 'error': 'Failed to fetch Redmine issue statuses list'
+		\ }
+	endif
+
+	let response= webapi#json#decode(res.content).issue_statuses
+	let result = {}
+	for status in response
+		let result[status.id] = status.name
+	endfor
+	return result
+endfunction
+
+function! s:fetch_issue_by_id(iid)
+	let url = s:redmine_issue_url(a:iid)
+	let headers = s:redmine_request_header
+	let res = webapi#http#get(url, {}, headers)
+
+	if res.status !~ '^2.*'
+		return [ 'error', 'Failed to fetch Redmine issue' ]
+	endif
+
+	let payload = webapi#json#decode(res.content)
+	return payload.issue
+endfunction
+
+function! s:get_issue_subject(iid)
+	let issue = s:fetch_issue_by_id(a:iid)
+	return issue.subject
 endfunction
 " }}}
 
