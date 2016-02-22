@@ -63,6 +63,7 @@ function! s:kind.action_table.view.func(candidate) " {{{
 	" Action: view
 	" Opens the selected issue in a new window, as markdown.
 	"
+	res 5
 	silent execute 'botright new'
 	let issue = a:candidate.source__issue_info.fetch_issue()
 	silent put =issue
@@ -111,6 +112,7 @@ function! s:setup_issue_view() " {{{
 	" Setup the issue view buffer.
 	"
 	setfiletype markdown
+	setlocal wrap linebreak nolist cc=0
 	setlocal nospell
 	setlocal buftype=nofile
 	setlocal bufhidden=wipe
