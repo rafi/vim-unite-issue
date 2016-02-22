@@ -223,7 +223,7 @@ function! s:view_issue(issue) " {{{
 	"
 	let doc = printf('%s / %s / %s',
 		\ a:issue.fields.project.name, a:issue.key, a:issue.fields.summary)
-	let doc .= "\n===\n"
+	let doc .= "\n===\n\n"
 	let table = {
 			\ 'Type': 'issuetype.name',
 			\ 'Status': 'status.name',
@@ -264,16 +264,16 @@ function! s:view_issue(issue) " {{{
 
 	" Display body of issue
 	if len(a:issue.fields.description) > 0
-		let doc .= "\nDescription\n-----------\n"
+		let doc .= "\nDescription\n-----------\n\n"
 		let doc .= s:convert_to_markdown(a:issue.fields.description)."\n"
 	endif
 
 	" Collect comments
 	if a:issue.fields.comment.total > 0
-		let doc .= "\nComments\n--------\n"
+		let doc .= "\nComments\n--------\n\n"
 		for comment in a:issue.fields.comment.comments
 			let doc .= printf('_%s_: ', comment.author.name)
-				\.s:convert_to_markdown(comment.body)."\n"
+				\.s:convert_to_markdown(comment.body)."\n\n"
 		endfor
 	endif
 
