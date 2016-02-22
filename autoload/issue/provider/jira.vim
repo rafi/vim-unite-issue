@@ -169,7 +169,7 @@ function! s:parse_issues(issues, roster) " {{{
 		let started = index(a:roster, 'jira/'.issue.key) >= 0
 		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
 
-		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S %S',
+		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S',
 			\ started ? '▶ '.issue.key : issue.key,
 			\ priority,
 			\ issue#str_trunc(status, 9),
@@ -177,9 +177,11 @@ function! s:parse_issues(issues, roster) " {{{
 			\ issue#str_trunc(assignee, 10),
 			\ has_key(issue.fields, 'parent') && issue.fields.parent.key !=? ''
 			\   ? issue.fields.parent.key.' / ' : '',
-			\ substitute(issue.fields.summary, '^\s\+', '', ''),
-			\ len(issue.fields.labels) > 0 ? '['.join(issue.fields.labels, ', ').']' : ''
-			\ )
+			\ substitute(issue.fields.summary, '^\s\+', '', ''))
+
+			if has_key(issue.fields, 'labels') && len(issue.fields.labels) > 0
+				let word = word + '['.join(issue.fields.labels, ', ').']'
+			endif
 
 		let item = {
 			\ 'word': word,
@@ -247,7 +249,7 @@ function! s:view_issue(issue) " {{{
 	endfor
 
 	" Collect labels
-	if len(a:issue.fields.labels) > 0
+	if has_key(a:issue.fields, 'labels') && len(a:issue.fields.labels) > 0
 		let doc .= '[Labels]: '.join(a:issue.fields.labels, ', ')."\n"
 	endif
 
