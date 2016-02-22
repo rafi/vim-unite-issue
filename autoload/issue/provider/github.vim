@@ -117,7 +117,7 @@ function! s:parse_issues(issues, repo, roster) " {{{
 	let candidates = []
 	for issue in a:issues
 		let repo = a:repo
-		if type(issue) != 4
+		if type(issue) != type({})
 			continue
 		endif
 		if len(repo) == 0 && has_key(issue, 'repository')
@@ -132,8 +132,17 @@ function! s:parse_issues(issues, repo, roster) " {{{
 		let state = get(g:unite_source_issue_github_state_table,
 			\ issue.state, issue.state)
 		let started = index(a:roster, repo.'/'.issue.number) >= 0
-		let milestone = type(issue.milestone) == 4 ? issue.milestone.title : '-'
-		let assignee = type(issue.user) == 4 ? issue.user.login : ''
+		let milestone = ''
+		let assignee = ''
+
+		if type(issue.milestone) == type({}) &&
+			\ has_key(issue.milestone, 'title')
+			let milestone = issue.milestone.title
+		endif
+
+		if type(issue.user) == type({}) && has_key(issue.user, 'login')
+			let assignee = issue.user.login
+		endif
 
 		" If the issue has been started, mark it.
 		let iss = issue.number

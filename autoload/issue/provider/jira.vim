@@ -166,7 +166,12 @@ function! s:parse_issues(issues, roster) " {{{
 			\ issue.fields.status.id, issue.fields.status.name)
 		let type = get(g:unite_source_issue_jira_type_table,
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
-		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
+		let assignee = ''
+
+		if type(issue.fields.assignee) == type({}) &&
+			\ has_key(issue.fields.assignee, 'displayName')
+			let assignee = issue.fields.assignee.displayName
+		endif
 
 		" If the issue has been started, mark it.
 		let iss = issue.key
