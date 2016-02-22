@@ -88,14 +88,14 @@ function! issue#get_path(dict, path) " {{{
 	let value = a:dict
 	while len(key_parts) > 0 && found == ''
 		let key_part = remove(key_parts, 0)
-		if type(get(value, key_part)) != 4
-			let found = get(value, key_part)
-		else
+		if type(get(value, key_part)) == type({})
 			let value = get(value, key_part)
+		else
+			let found = get(value, key_part)
 		endif
 	endwhile
 
-	return found ? found : ''
+	return type(found) == type('') ? found : ''
 endfunction
 
 " }}}

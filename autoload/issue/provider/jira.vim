@@ -224,6 +224,7 @@ function! s:view_issue(issue) " {{{
 	let doc = printf('%s / %s / %s',
 		\ a:issue.fields.project.name, a:issue.key, a:issue.fields.summary)
 	let doc .= "\n===\n\n"
+
 	let table = {
 			\ 'Type': 'issuetype.name',
 			\ 'Status': 'status.name',
@@ -238,14 +239,16 @@ function! s:view_issue(issue) " {{{
 	for [ title, path ] in items(table)
 		let odd = i % 2 > 0
 		let value = issue#get_path(a:issue.fields, path)
-		let prop = '['.title.']: '.value
-		if odd
-			let prop = repeat(' ', column_width - strdisplaywidth(last_prop)).prop."\n"
-		else
-			let last_prop = prop
+		if value != ''
+			let prop = '['.title.']: '.value
+			if odd
+				let prop = repeat(' ', column_width - strdisplaywidth(last_prop)).prop."\n"
+			else
+				let last_prop = prop
+			endif
+			let doc .= prop
+			let i += 1
 		endif
-		let doc .= prop
-		let i += 1
 	endfor
 
 	" Collect labels
