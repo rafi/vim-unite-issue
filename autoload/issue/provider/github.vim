@@ -135,9 +135,19 @@ function! s:parse_issues(issues, repo, roster) " {{{
 		let milestone = type(issue.milestone) == 4 ? issue.milestone.title : '-'
 		let assignee = type(issue.user) == 4 ? issue.user.login : ''
 
+		" If the issue has been started, mark it.
+		let iss = issue.number
+		if index(a:roster, repo . '/' . issue.number) >= 0
+			if &tenc == 'utf-8'
+				let iss = '▶ #' . issue.number
+			else
+				let iss = '> #' . issue.number
+			endif
+		endif
+
 		let word = printf('%-15S %-6S %2S:%-5S %12S  %-8S | %S %S',
 			\ issue#str_trunc(repo, 15),
-			\ started ? '▶ #'.issue.number : '#'.issue.number,
+			\ iss,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
 			\ issue#str_trunc(milestone, 12),

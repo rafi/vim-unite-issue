@@ -166,11 +166,20 @@ function! s:parse_issues(issues, roster) " {{{
 			\ issue.fields.status.id, issue.fields.status.name)
 		let type = get(g:unite_source_issue_jira_type_table,
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
-		let started = index(a:roster, 'jira/'.issue.key) >= 0
 		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
 
+		" If the issue has been started, mark it.
+		let iss = issue.key
+		if index(a:roster, 'jira/'.issue.key) >= 0
+			if &tenc == 'utf-8'
+				let iss = '▶ ' . issue.key
+			else
+				let iss = '> ' . issue.key
+			endif
+		endif
+
 		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S',
-			\ started ? '▶ '.issue.key : issue.key,
+			\ iss,
 			\ priority,
 			\ issue#str_trunc(status, 9),
 			\ issue#str_trunc(type, 15, 1),

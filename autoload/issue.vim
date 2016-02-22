@@ -68,12 +68,13 @@ endfunction
 
 " }}}
 function! issue#str_trunc(str, len, ...) " {{{
+	let elipsis = &tenc == 'utf-8' ? '…' : '...'
 	let str = a:str
 	if len(str) > a:len
 		if a:0 > 0 && a:1 == 1
-			let str = strpart(str, len(str) - a:len-1).'…'
+			let str = strpart(str, len(str) - a:len-len(elipsis)) . elipsis
 		else
-			let str = strpart(str, 0, a:len-1).'…'
+			let str = strpart(str, 0, a:len-len(elipsis)) . elipsis
 		endif
 	endif
 	return str
