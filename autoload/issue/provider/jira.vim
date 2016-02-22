@@ -221,8 +221,7 @@ endfunction
 function! s:view_issue(issue) " {{{
 	" Returns a Markdown representation of issue dictionary.
 	"
-	let doc = printf('%s / %s / %s',
-		\ a:issue.fields.project.name, a:issue.key, a:issue.fields.summary)
+	let doc = printf('%s / %s', a:issue.key, a:issue.fields.summary)
 	let doc .= "\n===\n\n"
 
 	let table = {
