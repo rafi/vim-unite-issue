@@ -230,7 +230,7 @@ function! s:view_issue(issue) " {{{
 			\ 'Priority': 'priority.name',
 			\ 'Resolution': 'resolution.name',
 			\ 'Resolution Date': 'resolution.date',
-			\ 'Assignee': 'assignee.name',
+			\ 'Assignee': 'assignee.displayName',
 			\ }
 
 	let i = 0
@@ -274,7 +274,7 @@ function! s:view_issue(issue) " {{{
 	if a:issue.fields.comment.total > 0
 		let doc .= "\nComments\n--------\n\n"
 		for comment in a:issue.fields.comment.comments
-			let doc .= printf('_%s_: ', comment.author.name)
+			let doc .= printf('_%s_: ', comment.author.displayName)
 				\.s:convert_to_markdown(comment.body)."\n\n"
 		endfor
 	endif
