@@ -195,7 +195,7 @@ function! s:view_issue(repo, issue, comments) " {{{
 	"
 	let doc = printf('%s / #%s / %s',
 		\ a:repo, a:issue.number, a:issue.title)
-	let doc .= "\n===\n"
+	let doc .= "\n===\n\n"
 	let table = {
 			\ 'Milestone': 'milestone.title',
 			\ 'Assignee': 'assignee.login',
@@ -233,13 +233,13 @@ function! s:view_issue(repo, issue, comments) " {{{
 
 	" Display body of issue
 	if len(a:issue.body) > 0
-		let doc .= "\nDescription\n-----------\n"
+		let doc .= "\nDescription\n-----------\n\n"
 		let doc .= substitute(a:issue.body, "\r", '', 'g')."\n"
 	endif
 
 	" Collect comments
 	if a:issue.comments > 0
-		let doc .= "\nComments\n--------\n"
+		let doc .= "\nComments\n--------\n\n"
 		for comment in a:comments
 			let doc .= printf('_%s_: ', comment.user.login)
 				\.substitute(comment.body, "\r", '', 'g')."\n"
