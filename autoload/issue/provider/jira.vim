@@ -274,8 +274,8 @@ function! s:view_issue(issue) " {{{
 	if a:issue.fields.comment.total > 0
 		let doc .= "\nComments\n--------\n\n"
 		for comment in a:issue.fields.comment.comments
-			let doc .= printf('_%s_: ', comment.author.displayName)
-				\.s:convert_to_markdown(comment.body)."\n\n"
+			let doc .= printf('{{{ _%s_: ', comment.author.displayName)
+				\.s:convert_to_markdown(comment.body)."\n}}}\n\n"
 		endfor
 	endif
 
@@ -286,18 +286,31 @@ endfunction
 function! s:convert_to_markdown(txt) " {{{
 	" Converts Atlassian JIRA markup to Markdown.
 	"
-	let txt = a:txt
-	let txt = substitute(txt, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
-	let txt = substitute(txt, '{code\(:\([a-z]\+\)\)\?}', '```\2', 'g')
-	let txt = substitute(txt, '{{\([^}\n]\+\)}}', '`\1`', 'g')
-	let txt = substitute(txt, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
-	let txt = substitute(txt, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
-	let txt = substitute(txt, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
-	let txt = substitute(txt, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
-	let txt = substitute(txt, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
-	let txt = substitute(txt, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
-	let txt = substitute(txt, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
-	let txt = substitute(txt, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
+
+	let i = 0
+	let txt = ''
+
+	" TODO: Preserve context in the {code} tag.
+	for t in split(a:txt, '{code\(:\([a-z]\+\)\)\?}[\r\n]\+')
+		if i % 2 > 0
+			let txt .= "```\n{{{ " . t . "}}}\n```\n"
+		else
+			let x = substitute(t, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
+			let x = substitute(x, '{{\([^}\n]\+\)}}', '`\1`', 'g')
+			let x = substitute(x, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
+			let x = substitute(x, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
+			let x = substitute(x, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
+			let x = substitute(x, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
+			let x = substitute(x, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
+			let x = substitute(x, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
+			let x = substitute(x, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
+			let x = substitute(x, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
+			let txt .= x
+		endif
+
+		let i += 1
+	endfor
+
 	let txt = substitute(txt, "\r", '', 'g')
 	return txt
 endfunction
