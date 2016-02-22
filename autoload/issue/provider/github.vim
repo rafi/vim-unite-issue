@@ -241,8 +241,8 @@ function! s:view_issue(repo, issue, comments) " {{{
 	if a:issue.comments > 0
 		let doc .= "\nComments\n--------\n\n"
 		for comment in a:comments
-			let doc .= printf('_%s_: ', comment.user.login)
-				\.substitute(comment.body, "\r", '', 'g')."\n"
+			let doc .= printf('{{{ _%s_: ', comment.user.login)
+				\.substitute(comment.body, "\r", '', 'g')."\n}}}\n\n"
 		endfor
 	endif
 
