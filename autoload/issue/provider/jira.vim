@@ -229,7 +229,7 @@ function! s:view_issue(issue) " {{{
 			\ 'Status': 'status.name',
 			\ 'Priority': 'priority.name',
 			\ 'Resolution': 'resolution.name',
-			\ 'Resolution Date': 'resolutiondate',
+			\ 'Resolution Date': 'resolution.date',
 			\ 'Assignee': 'assignee.name',
 			\ }
 
