@@ -183,19 +183,34 @@ function! s:parse_issues(issues, roster) " {{{
 			endif
 		endif
 
-		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S',
-			\ iss,
-			\ priority,
-			\ issue#str_trunc(status, 9),
-			\ issue#str_trunc(type, 15, 1),
-			\ issue#str_trunc(assignee, 10),
-			\ has_key(issue.fields, 'parent') && issue.fields.parent.key !=? ''
-			\   ? issue.fields.parent.key.' / ' : '',
-			\ substitute(issue.fields.summary, '^\s\+', '', ''))
+		" Figure out the widths for the status and type
+		let s_width = max(map(copy(g:unite_source_issue_jira_status_table),
+			\ 'strlen(v:val)'))
+		let t_width = max(map(copy(g:unite_source_issue_jira_type_table),
+			\ 'strlen(v:val)'))
 
-			if has_key(issue.fields, 'labels') && len(issue.fields.labels) > 0
-				let word = word + '['.join(issue.fields.labels, ', ').']'
-			endif
+		" Get the amount of room for the ticket summary / labels
+		let ww = winwidth(0) - s_width - t_width - 37
+		if ww < 0
+			ww = 10
+		endif
+
+		" Truncate the description / labels according to ww
+		let word = substitute(issue.fields.summary, '^\s\+', '', '')
+		if has_key(issue.fields, 'labels') && len(issue.fields.labels) > 0
+			let word .= '['.join(issue.fields.labels, ', ').']'
+		endif
+		let word = issue#str_trunc(word, ww)
+
+		" Format the display line for unite
+		let word = printf('%-12S %-3S:%-'
+			\ . s_width . 'S %-' . t_width . 'S  %10S | %s',
+			\ iss,
+			\ issue#str_trunc(priority, 3),
+			\ status,
+			\ type,
+			\ issue#str_trunc(assignee, 10),
+			\ word)
 
 		let item = {
 			\ 'word': word,
