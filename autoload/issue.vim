@@ -118,12 +118,12 @@ function! issue#highlight_general() " {{{
 	highlight default link uniteSource__Issue_Count Statement
 
 	" Within properties, match a word after a semicolon (e.g. priority)
-	syntax match uniteSource__Issue_Status /:\(\h\+\-\?\s\?…\?\)\{1,3}/
+	syntax match uniteSource__Issue_Status /:\(\S\+\-\?\s\?…\?\)\{1,3}/
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_Status PreProc
 
 	" Within properties, match a word before a pipe (e.g. user)
-	syntax match uniteSource__Issue_User /\(\h\+\.\?\s\?…\?\)\{1,2}\ze\s*|/
+	syntax match uniteSource__Issue_User /\(\S\+\.\?\s\?…\?\)\{1,2}\ze\s*|/
 				\ contained containedin=uniteSource__Issue_Properties
 	highlight default link uniteSource__Issue_User Special
 
