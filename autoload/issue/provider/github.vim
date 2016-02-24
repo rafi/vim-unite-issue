@@ -117,7 +117,7 @@ function! s:parse_issues(issues, repo, roster) " {{{
 	let candidates = []
 	for issue in a:issues
 		let repo = a:repo
-		if type(issue) != 4
+		if type(issue) != type({})
 			continue
 		endif
 		if len(repo) == 0 && has_key(issue, 'repository')
@@ -132,12 +132,31 @@ function! s:parse_issues(issues, repo, roster) " {{{
 		let state = get(g:unite_source_issue_github_state_table,
 			\ issue.state, issue.state)
 		let started = index(a:roster, repo.'/'.issue.number) >= 0
-		let milestone = type(issue.milestone) == 4 ? issue.milestone.title : '-'
-		let assignee = type(issue.user) == 4 ? issue.user.login : ''
+		let milestone = ''
+		let assignee = ''
+
+		if type(issue.milestone) == type({}) &&
+			\ has_key(issue.milestone, 'title')
+			let milestone = issue.milestone.title
+		endif
+
+		if type(issue.user) == type({}) && has_key(issue.user, 'login')
+			let assignee = issue.user.login
+		endif
+
+		" If the issue has been started, mark it.
+		let iss = issue.number
+		if index(a:roster, repo . '/' . issue.number) >= 0
+			if &tenc == 'utf-8'
+				let iss = '▶ #' . issue.number
+			else
+				let iss = '> #' . issue.number
+			endif
+		endif
 
 		let word = printf('%-15S %-6S %2S:%-5S %12S  %-8S | %S %S',
 			\ issue#str_trunc(repo, 15),
-			\ started ? '▶ #'.issue.number : '#'.issue.number,
+			\ iss,
 			\ issue.comments > 0 ? issue.comments : '-',
 			\ state,
 			\ issue#str_trunc(milestone, 12),
@@ -195,7 +214,7 @@ function! s:view_issue(repo, issue, comments) " {{{
 	"
 	let doc = printf('%s / #%s / %s',
 		\ a:repo, a:issue.number, a:issue.title)
-	let doc .= "\n===\n"
+	let doc .= "\n===\n\n"
 	let table = {
 			\ 'Milestone': 'milestone.title',
 			\ 'Assignee': 'assignee.login',
@@ -233,16 +252,16 @@ function! s:view_issue(repo, issue, comments) " {{{
 
 	" Display body of issue
 	if len(a:issue.body) > 0
-		let doc .= "\nDescription\n-----------\n"
+		let doc .= "\nDescription\n-----------\n\n"
 		let doc .= substitute(a:issue.body, "\r", '', 'g')."\n"
 	endif
 
 	" Collect comments
 	if a:issue.comments > 0
-		let doc .= "\nComments\n--------\n"
+		let doc .= "\nComments\n--------\n\n"
 		for comment in a:comments
-			let doc .= printf('_%s_: ', comment.user.login)
-				\.substitute(comment.body, "\r", '', 'g')."\n"
+			let doc .= printf('{{{ _%s_: ', comment.user.login)
+				\.substitute(comment.body, "\r", '', 'g')."\n}}}\n\n"
 		endfor
 	endif
 

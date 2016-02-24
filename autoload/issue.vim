@@ -68,12 +68,13 @@ endfunction
 
 " }}}
 function! issue#str_trunc(str, len, ...) " {{{
+	let elipsis = &tenc == 'utf-8' ? '…' : '...'
 	let str = a:str
 	if len(str) > a:len
 		if a:0 > 0 && a:1 == 1
-			let str = strpart(str, len(str) - a:len-1).'…'
+			let str = strpart(str, len(str) - a:len-len(elipsis)) . elipsis
 		else
-			let str = strpart(str, 0, a:len-1).'…'
+			let str = strpart(str, 0, a:len-len(elipsis)) . elipsis
 		endif
 	endif
 	return str
@@ -88,14 +89,14 @@ function! issue#get_path(dict, path) " {{{
 	let value = a:dict
 	while len(key_parts) > 0 && found == ''
 		let key_part = remove(key_parts, 0)
-		if type(get(value, key_part)) != 4
-			let found = get(value, key_part)
-		else
+		if type(get(value, key_part)) == type({})
 			let value = get(value, key_part)
+		else
+			let found = get(value, key_part)
 		endif
 	endwhile
 
-	return found ? found : ''
+	return type(found) == type('') ? found : ''
 endfunction
 
 " }}}

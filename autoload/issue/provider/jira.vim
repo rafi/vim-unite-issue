@@ -166,20 +166,51 @@ function! s:parse_issues(issues, roster) " {{{
 			\ issue.fields.status.id, issue.fields.status.name)
 		let type = get(g:unite_source_issue_jira_type_table,
 			\ issue.fields.issuetype.id, issue.fields.issuetype.name)
-		let started = index(a:roster, 'jira/'.issue.key) >= 0
-		let assignee = type(issue.fields.assignee) == 4 ? issue.fields.assignee.displayName : ''
+		let assignee = ''
 
-		let word = printf('%-10S %-7S:%-9S %15S  %-10S | %S%S %S',
-			\ started ? '▶ '.issue.key : issue.key,
-			\ priority,
-			\ issue#str_trunc(status, 9),
-			\ issue#str_trunc(type, 15, 1),
+		if type(issue.fields.assignee) == type({}) &&
+			\ has_key(issue.fields.assignee, 'displayName')
+			let assignee = issue.fields.assignee.displayName
+		endif
+
+		" If the issue has been started, mark it.
+		let iss = issue.key
+		if index(a:roster, 'jira/'.issue.key) >= 0
+			if &tenc == 'utf-8'
+				let iss = '▶ ' . issue.key
+			else
+				let iss = '> ' . issue.key
+			endif
+		endif
+
+		" Figure out the widths for the status and type
+		let s_width = max(map(copy(g:unite_source_issue_jira_status_table),
+			\ 'strlen(v:val)'))
+		let t_width = max(map(copy(g:unite_source_issue_jira_type_table),
+			\ 'strlen(v:val)'))
+
+		" Get the amount of room for the ticket summary / labels
+		let ww = winwidth(0) - s_width - t_width - 37
+		if ww < 0
+			ww = 10
+		endif
+
+		" Truncate the description / labels according to ww
+		let word = substitute(issue.fields.summary, '^\s\+', '', '')
+		if has_key(issue.fields, 'labels') && len(issue.fields.labels) > 0
+			let word .= '['.join(issue.fields.labels, ', ').']'
+		endif
+		let word = issue#str_trunc(word, ww)
+
+		" Format the display line for unite
+		let word = printf('%-12S %-3S:%-'
+			\ . s_width . 'S %-' . t_width . 'S  %10S | %s',
+			\ iss,
+			\ issue#str_trunc(priority, 3),
+			\ status,
+			\ type,
 			\ issue#str_trunc(assignee, 10),
-			\ has_key(issue.fields, 'parent') && issue.fields.parent.key !=? ''
-			\   ? issue.fields.parent.key.' / ' : '',
-			\ substitute(issue.fields.summary, '^\s\+', '', ''),
-			\ len(issue.fields.labels) > 0 ? '['.join(issue.fields.labels, ', ').']' : ''
-			\ )
+			\ word)
 
 		let item = {
 			\ 'word': word,
@@ -219,16 +250,16 @@ endfunction
 function! s:view_issue(issue) " {{{
 	" Returns a Markdown representation of issue dictionary.
 	"
-	let doc = printf('%s / %s / %s',
-		\ a:issue.fields.project.name, a:issue.key, a:issue.fields.summary)
-	let doc .= "\n===\n"
+	let doc = printf('%s / %s', a:issue.key, a:issue.fields.summary)
+	let doc .= "\n===\n\n"
+
 	let table = {
 			\ 'Type': 'issuetype.name',
 			\ 'Status': 'status.name',
 			\ 'Priority': 'priority.name',
 			\ 'Resolution': 'resolution.name',
-			\ 'Resolution Date': 'resolutiondate',
-			\ 'Assignee': 'assignee.name',
+			\ 'Resolution Date': 'resolution.date',
+			\ 'Assignee': 'assignee.displayName',
 			\ }
 
 	let i = 0
@@ -236,18 +267,20 @@ function! s:view_issue(issue) " {{{
 	for [ title, path ] in items(table)
 		let odd = i % 2 > 0
 		let value = issue#get_path(a:issue.fields, path)
-		let prop = '['.title.']: '.value
-		if odd
-			let prop = repeat(' ', column_width - strdisplaywidth(last_prop)).prop."\n"
-		else
-			let last_prop = prop
+		if value != ''
+			let prop = '['.title.']: '.value
+			if odd
+				let prop = repeat(' ', column_width - strdisplaywidth(last_prop)).prop."\n"
+			else
+				let last_prop = prop
+			endif
+			let doc .= prop
+			let i += 1
 		endif
-		let doc .= prop
-		let i += 1
 	endfor
 
 	" Collect labels
-	if len(a:issue.fields.labels) > 0
+	if has_key(a:issue.fields, 'labels') && len(a:issue.fields.labels) > 0
 		let doc .= '[Labels]: '.join(a:issue.fields.labels, ', ')."\n"
 	endif
 
@@ -262,16 +295,16 @@ function! s:view_issue(issue) " {{{
 
 	" Display body of issue
 	if len(a:issue.fields.description) > 0
-		let doc .= "\nDescription\n-----------\n"
+		let doc .= "\nDescription\n-----------\n\n"
 		let doc .= s:convert_to_markdown(a:issue.fields.description)."\n"
 	endif
 
 	" Collect comments
 	if a:issue.fields.comment.total > 0
-		let doc .= "\nComments\n--------\n"
+		let doc .= "\nComments\n--------\n\n"
 		for comment in a:issue.fields.comment.comments
-			let doc .= printf('_%s_: ', comment.author.name)
-				\.s:convert_to_markdown(comment.body)."\n"
+			let doc .= printf('{{{ _%s_: ', comment.author.displayName)
+				\.s:convert_to_markdown(comment.body)."\n}}}\n\n"
 		endfor
 	endif
 
@@ -282,18 +315,31 @@ endfunction
 function! s:convert_to_markdown(txt) " {{{
 	" Converts Atlassian JIRA markup to Markdown.
 	"
-	let txt = a:txt
-	let txt = substitute(txt, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
-	let txt = substitute(txt, '{code\(:\([a-z]\+\)\)\?}', '```\2', 'g')
-	let txt = substitute(txt, '{{\([^}\n]\+\)}}', '`\1`', 'g')
-	let txt = substitute(txt, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
-	let txt = substitute(txt, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
-	let txt = substitute(txt, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
-	let txt = substitute(txt, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
-	let txt = substitute(txt, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
-	let txt = substitute(txt, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
-	let txt = substitute(txt, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
-	let txt = substitute(txt, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
+
+	let i = 0
+	let txt = ''
+
+	" TODO: Preserve context in the {code} tag.
+	for t in split(a:txt, '{code\(:\([a-z]\+\)\)\?}[\r\n]\+')
+		if i % 2 > 0
+			let txt .= "```\n{{{ " . t . "}}}\n```\n"
+		else
+			let x = substitute(t, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
+			let x = substitute(x, '{{\([^}\n]\+\)}}', '`\1`', 'g')
+			let x = substitute(x, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
+			let x = substitute(x, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
+			let x = substitute(x, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
+			let x = substitute(x, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
+			let x = substitute(x, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
+			let x = substitute(x, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
+			let x = substitute(x, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
+			let x = substitute(x, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
+			let txt .= x
+		endif
+
+		let i += 1
+	endfor
+
 	let txt = substitute(txt, "\r", '', 'g')
 	return txt
 endfunction
