@@ -173,6 +173,7 @@ function! s:parse_issues(issues, repo, roster) " {{{
 			\   'key': issue.number,
 			\   'url': issue.html_url,
 			\   'fetch_issue': function('s:fetch_issue'),
+			\   'add_comment': function('s:add_comment'),
 			\  }
 			\ }
 
@@ -181,7 +182,6 @@ function! s:parse_issues(issues, repo, roster) " {{{
 
 	return candidates
 endfunction
-
 " }}}
 function! s:fetch_issue() dict " {{{
 	" Queries GitHub's Issue API for a specific issue.
@@ -266,6 +266,23 @@ function! s:view_issue(repo, issue, comments) " {{{
 	endif
 
 	return doc
+endfunction
+" }}}
+function! s:add_comment(txt) " dict {{{
+	" Add a comment
+
+	if a:txt == ''
+		return
+	endif
+
+	let res = webapi#http#post(
+		\ s:github_issue_url(self.repo, self.key) . '/comments',
+		\ webapi#json#encode({ 'body': a.txt }),
+		\ s:github_request_header)
+
+	if res.status !~ '^2.*'
+		echoerr 'Failed to post comment (' . res.status . ')'
+	endif
 endfunction
 " }}}
 

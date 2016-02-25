@@ -134,6 +134,29 @@ function! issue#highlight_general() " {{{
 	highlight default link uniteSource__Issue_Labels Comment
 endfunction
 " }}}
+function! issue#add_comment() " {{{
+	" Open a new window for adding a comment, and pass
+	" the comment text to the issue provider on write.
+
+	if !exists('w:issue')
+		return
+	endif
+
+	let issue = w:issue
+	let fn = '__comment_' . w:issue.key
+	botright 10new `=fn`
+	setlocal wrap linebreak nolist cc=0
+	setlocal filetype=markdown
+	setlocal buftype=acwrite
+	setlocal nobuflisted noswapfile
+	let w:issue = issue
+
+	autocmd! * <buffer>
+	autocmd BufWriteCmd <buffer> call w:issue.add_comment(
+		\ join(getline(0,'$'), "\n"))
+	autocmd BufWriteCmd <buffer> :q!
+endfunction
+" }}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

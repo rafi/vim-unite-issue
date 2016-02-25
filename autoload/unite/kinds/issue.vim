@@ -32,10 +32,6 @@ let s:kind.action_table = {
 	\   'is_invalidate_cache': 1,
 	\   'is_quit': 0
 	\ },
-	\ 'comment': {
-	\   'description': 'Add a new comment to issue',
-	\   'is_quit': 0
-	\ },
 	\ }
 " }}}
 
@@ -67,7 +63,7 @@ function! s:kind.action_table.view.func(candidate) " {{{
 	silent execute 'botright new'
 	let issue = a:candidate.source__issue_info.fetch_issue()
 	silent put =issue
-	call s:setup_issue_view()
+	call s:setup_issue_view(a:candidate.source__issue_info)
 	:0
 endfunction
 
@@ -100,15 +96,7 @@ function! s:kind.action_table.stop.func(candidate) " {{{
 endfunction
 
 " }}}
-function! s:kind.action_table.comment.func(candidate) " {{{
-	" Action: comment
-	" Add a new comment to issue
-	"
-	" TODO:
-endfunction
-
-" }}}
-function! s:setup_issue_view() " {{{
+function! s:setup_issue_view(issue) " {{{
 	" Setup the issue view buffer.
 	"
 	setfiletype markdown
@@ -121,6 +109,9 @@ function! s:setup_issue_view() " {{{
 	setlocal nomodified
 	setlocal nomodifiable
 	setlocal readonly
+
+	let w:issue = a:issue
+	command! -nargs=0 -buffer AddComment call issue#add_comment()
 endfunction
 " }}}
 
