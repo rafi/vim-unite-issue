@@ -220,6 +220,7 @@ function! s:parse_issues(issues, roster) " {{{
 			\   'key': issue.key,
 			\   'url': g:jira_url.'/browse/'.issue.key,
 			\   'fetch_issue': function('s:fetch_issue'),
+			\   'add_comment': function('s:add_comment'),
 			\  }
 			\ }
 
@@ -228,7 +229,6 @@ function! s:parse_issues(issues, roster) " {{{
 
 	return candidates
 endfunction
-
 " }}}
 function! s:fetch_issue() dict " {{{
 	" Queries JIRA API for a specific issue.
@@ -279,6 +279,12 @@ function! s:view_issue(issue) " {{{
 		endif
 	endfor
 
+	" Add an additional newline if we only added an odd number of
+	" fields.
+	if i % 2 > 0
+		let doc .= "\n"
+	endif
+
 	" Collect labels
 	if has_key(a:issue.fields, 'labels') && len(a:issue.fields.labels) > 0
 		let doc .= '[Labels]: '.join(a:issue.fields.labels, ', ')."\n"
@@ -320,21 +326,23 @@ function! s:convert_to_markdown(txt) " {{{
 	let txt = ''
 
 	" TODO: Preserve context in the {code} tag.
-	for t in split(a:txt, '{code\(:\([a-z]\+\)\)\?}[\r\n]\+')
+	for t in split(a:txt, '{code\(:\([a-z]\+\)\)\?}')
 		if i % 2 > 0
-			let txt .= "```\n{{{ " . t . "}}}\n```\n"
+			let t = substitute(t, '^[\r\n]\+', '', '')
+			let t = substitute(t, '[\r\n\t ]\+$', '', '')
+			let txt .= "```\n{{{ " . t . "\n}}}\n```\n"
 		else
-			let x = substitute(t, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
-			let x = substitute(x, '{{\([^}\n]\+\)}}', '`\1`', 'g')
-			let x = substitute(x, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
-			let x = substitute(x, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
-			let x = substitute(x, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
-			let x = substitute(x, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
-			let x = substitute(x, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
-			let x = substitute(x, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
-			let x = substitute(x, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
-			let x = substitute(x, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
-			let txt .= x
+			let t = substitute(t, 'h\(\d\+\)\. ', '\=repeat("#", submatch(1))." "', 'g')
+			let t = substitute(t, '{{\([^}\n]\+\)}}', '`\1`', 'g')
+			let t = substitute(t, '\*\([^\*\n]\{-}\)\*', '\*\*\1\*\*', 'g')
+			let t = substitute(t, '_\([^_\n]\{-}\)_', '\*\1\*', 'g')
+			let t = substitute(t, '\s\zs-\([^-\n]\{-}\)-', '~~~\1~~~', 'g')
+			let t = substitute(t, '+\([^+\n]\+\)+', '<ins>\1</ins>', 'g')
+			let t = substitute(t, '\^\([^\^\n]\+\)\^', '<sup>\1</sup>', 'g')
+			let t = substitute(t, '??\([^?\n]\+\)??', '<cite>\1</cite>', 'g')
+			let t = substitute(t, '\[\([^|\]\n]\+\)|\([^\]\n]\+\)\]', '[\1](\2)', 'g')
+			let t = substitute(t, '\[\([\([^\]\n]\+\)\]\([^(]*\)', '<\1>\2', 'g')
+			let txt .= t
 		endif
 
 		let i += 1
@@ -348,8 +356,64 @@ endfunction
 function! s:convert_from_markdown(txt) " {{{
 	" Converts Markdown to Atlassian JIRA markup.
 	"
-	" TODO: Will be used for writing comments.
-	return a:txt
+	let i = 0
+	let txt = ''
+
+	let code_only = 0
+	let lst = split(a:txt, '```\([a-z]\+\)\?')
+	if len(lst) == 1 && match(a:txt, '```') > -1
+		let code_only = 1
+	endif
+
+	for t in lst
+		if i % 2 > 0 || code_only == 1
+			let t = substitute(t, '{{{', '', 'g')
+			let t = substitute(t, '}}}', '', 'g')
+			let t = substitute(t, '^[\r\n\t ]\+', '', '')
+			let t = substitute(t, '[\r\n\t ]\+$', '', '')
+			let txt .= "{code}\n" . t . "\n{code}\n"
+		else
+			let t = substitute(t, '{{{', '', 'g')
+			let t = substitute(t, '}}}', '', 'g')
+			let t = substitute(t, '\(#\+\)',
+				\ '\="h" . strlen(submatch(1)) . "."', 'g')
+			let t = substitute(t, '`\([^}\n]\+\)`', '{{\1}}', 'g')
+			let t = substitute(t, '[^\*]\*\*\([^_\n]\{-}\)\*[^\*]\*',
+				\ '_\1_', 'g')
+			let t = substitute(t, '\*\*\*\([^\n]\{-}\)\*\*\*', '\*\1\*', 'g')
+			let t = substitute(t, '\~\~\~\([^-\n]\{-}\)\~\~\~', '-\1-', 'g')
+			let t = substitute(t, '<ins>\([^+\n]\+\)</ins>', '+\1+', 'g')
+			let t = substitute(t, '<sup>\([^\^\n]\+\)</sup>', '^\1^', 'g')
+			let t = substitute(t, '<cite>\([^?\n]\+\)</cite>', '??\1??', 'g')
+			let t = substitute(t, '\[\([^|\]\n]\+\)\](\([^\]\n]\+\))',
+				\ '[\1|\2]', 'g')
+			let txt .= t
+		endif
+
+		let i += 1
+	endfor
+
+	let txt = substitute(txt, "\r", '', 'g')
+	return txt
+endfunction
+
+" }}}
+function! s:add_comment(txt) dict " {{{
+	" Add a comment
+
+	if a:txt == ''
+		return
+	endif
+
+	let j = webapi#json#encode({
+		\ 'body': s:convert_from_markdown(a:txt)
+	\ })
+	let res = webapi#http#post(
+		\ s:jira_issue_url(self.key) . '/comment',
+		\ j, s:jira_request_header)
+	if res.status !~ '^2.*'
+		echoerr 'failed to post comment (' . res.status . ')'
+	endif
 endfunction
 " }}}
 
