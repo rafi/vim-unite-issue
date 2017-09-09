@@ -192,7 +192,7 @@ function! s:parse_issues(issues, roster) " {{{
 		" Get the amount of room for the ticket summary / labels
 		let ww = winwidth(0) - s_width - t_width - 37
 		if ww < 0
-			ww = 10
+			let ww = 10
 		endif
 
 		" Truncate the description / labels according to ww
