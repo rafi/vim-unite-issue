@@ -61,7 +61,7 @@ function! issue#provider#jira#fetch_issues(arg, context, roster) " {{{
 	" argument, e.g. -custom-issue-jql=project=FOO\ AND\ assignee=joe
 	let jql = get(a:context, 'custom_issue_jql', '')
 	if len(jql) == 0
-		let jql = s:jira_build_jql({'assignee' : g:jira_username, 'resolution': 'unresolved', 'project':  a:arg})
+		let jql = s:jira_build_jql({'assignee' : substitute(g:jira_username, '@', '\\\\u0040', ''), 'resolution': 'unresolved', 'project':  a:arg})
 	endif
 
 	call unite#print_source_message('Fetch JIRA: '.jql, 'issue')
